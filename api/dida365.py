@@ -17,8 +17,7 @@ class Dida365:
             'x-device': '{"platform":"web","os":"Windows 10","device":"Chrome 109.0.0.0","name":"","version":4411,"id":"63b0fb54363a786fba71cc80","channel":"website","campaign":"","websocket":""}',
         }
         self.login()
-        self.get_data()
-        self.enrich_info()
+        self.get_latest_data()
 
     def login(self):
         url = self.base_url + "/user/signon?wc=true&remember=true"
@@ -29,6 +28,10 @@ class Dida365:
         })
         r = self.session.request("POST", url, headers=self.headers, data=data)
         r.raise_for_status()
+
+    def get_latest_data(self):
+        self.get_data()
+        self.enrich_info()
 
     def get_data(self):
         url = self.base_url + "/batch/check/0"
@@ -54,5 +57,10 @@ class Dida365:
         projects = self.data['projectProfiles']
         self.projects = [Project(i) for i in projects]
 
-    def update_task(self,task_id):
-        url = self.base_url + ""
+    def update_task(self, payload):
+        url = self.base_url + "/batch/task"
+        data = json.dumps(payload)
+        r = self.session.request("POST", url, headers=self.headers, data=data)
+        r.raise_for_status
+
+

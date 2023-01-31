@@ -1,3 +1,7 @@
+import json
+from utils.time_util import get_prc_arrow, get_utc_str
+
+
 class Task:
     KIND_CHECKLIST = "CHECKLIST"
     KIND_TEXT = "TEXT"
@@ -10,18 +14,54 @@ class Task:
     DUE_DATE = "dueDate"
     REPEAT_FLAG = "repeatFlag"
     REPEAT_FIRST_DATE = "repeatFirstDate"
+    CREATED_TIME = "createdTime"
     KIND = "kind"
 
     def __init__(self, task_dict) -> None:
         self.task_dict = task_dict
-        self.id = task_dict.get(Task.ID)
-        self.project_id = task_dict.get(Task.PROJECT_ID)
+        self._load_field()
+        self._datetime_format()
+
+    def _load_field(self):
+        self.id = self.task_dict.get(Task.ID)
+        self.project_id = self.task_dict.get(Task.PROJECT_ID)
         self.project_name = None
-        self.title = task_dict.get(Task.TITLE)
-        self.content = task_dict.get(Task.CONTENT)
-        self.start_date = task_dict.get(Task.START_DATE)
-        self.modified_time = task_dict.get(Task.MODIFIED_TIME)
-        self.due_date = task_dict.get(Task.DUE_DATE)
-        self.repeat_flag = task_dict.get(Task.REPEAT_FLAG)
-        self.repeat_first_date = task_dict.get(Task.REPEAT_FIRST_DATE)
-        self.kind = task_dict.get(Task.KIND)
+        self.title = self.task_dict.get(Task.TITLE)
+        self.content = self.task_dict.get(Task.CONTENT)
+        self.start_date = self.task_dict.get(Task.START_DATE)
+        self.modified_time = self.task_dict.get(Task.MODIFIED_TIME)
+        self.created_time = self.task_dict.get(Task.CREATED_TIME)
+        self.due_date = self.task_dict.get(Task.DUE_DATE)
+        self.repeat_flag = self.task_dict.get(Task.REPEAT_FLAG)
+        self.repeat_first_date = self.task_dict.get(Task.REPEAT_FIRST_DATE)
+        self.kind = self.task_dict.get(Task.KIND)
+
+    def _datetime_format(self):
+        if self.start_date:
+            self.start_date = get_prc_arrow(self.start_date)
+        if self.due_date:
+            self.due_date = get_prc_arrow(self.due_date)
+        if self.repeat_first_date:
+            self.repeat_first_date = get_prc_arrow(self.repeat_first_date)
+        if self.modified_time:
+            self.modified_time = get_prc_arrow(self.modified_time)
+        if self.created_time:
+            self.created_time = get_prc_arrow(self.created_time)
+
+    @staticmethod
+    def gen_update_date_payload(new_task_dict):
+        payload = dict()
+        payload['add'] = []
+        payload['delete'] = []
+        payload['addAttachments'] = []
+        payload['updateAttachments'] = []
+        payload['deleteAttachments'] = []
+        payload['update'] = [new_task_dict]
+        return payload
+
+    def shift_start_date(self, days):
+        self.org_start_date = self.start_date
+        start_date = self.start_date.shift(days=days)
+        self.shifted_start_date = start_date
+        start_date_utc_str = get_utc_str(start_date)
+        self.task_dict[Task.START_DATE] = start_date_utc_str
