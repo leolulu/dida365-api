@@ -62,5 +62,3 @@ class Dida365:
         data = json.dumps(payload)
         r = self.session.request("POST", url, headers=self.headers, data=data)
         r.raise_for_status
-
-
