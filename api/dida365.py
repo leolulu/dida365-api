@@ -4,7 +4,7 @@ import requests
 from models.project import Project
 from models.task import Task
 
-from utils.pw_util import get_user_password
+from utils.file_util import get_user_password
 
 
 class Dida365:
