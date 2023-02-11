@@ -1,4 +1,6 @@
 import json
+
+from models.link import Link
 from utils.time_util import get_prc_arrow, get_utc_str
 
 
@@ -29,6 +31,7 @@ class Task:
     def _load_field(self):
         self.id = self.task_dict.get(Task.ID)
         self.project_id = self.task_dict.get(Task.PROJECT_ID)
+        self.url = Link.LINK_TEMPLATE.format(project_id=self.project_id, task_id=self.id)
         self.project_name = None
         self.title = self.task_dict.get(Task.TITLE)
         self.content = self.task_dict.get(Task.CONTENT)
@@ -71,12 +74,18 @@ class Task:
         self.org_start_date = self.start_date
         start_date = self.start_date.shift(days=days)
         self.shifted_start_date = start_date
-        start_date_utc_str = get_utc_str(start_date)
-        self.task_dict[Task.START_DATE] = start_date_utc_str
+        self.start_date = get_utc_str(start_date)
+        self.task_dict[Task.START_DATE] = self.start_date
 
     def change_status(self, status):
-        self.task_dict[Task.STATUS] = status
+        self.status = status
+        self.task_dict[Task.STATUS] = self.status
 
     def perpetuate_task(self):
         self.change_status(Task.STATUS_ACTIVE)
-        self.task_dict[Task.START_DATE] = get_utc_str(self.start_date.replace(year=2099, month=12, day=31))
+        self.start_date = get_utc_str(self.start_date.replace(year=2099, month=12, day=31))
+        self.task_dict[Task.START_DATE] = self.start_date
+
+    def update_content(self, content):
+        self.content = content
+        self.task_dict[Task.CONTENT] = self.content

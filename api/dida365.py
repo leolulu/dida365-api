@@ -9,7 +9,8 @@ from utils.time_util import get_standard_str, get_today_arrow
 
 
 class Dida365:
-    def __init__(self) -> None:
+    def __init__(self, if_get_closed_task=True) -> None:
+        self.if_get_closed_task = if_get_closed_task
         self.session = requests.Session()
         self.base_url = 'https://api.dida365.com/api/v2'
         self.headers = {
@@ -41,7 +42,8 @@ class Dida365:
         self.data = json.loads(r.content)
         self._get_projects()
         self._get_task()
-        self._get_closed_task('670946db840bf3f353ab7738')
+        if self.if_get_closed_task:
+            self._get_closed_task('670946db840bf3f353ab7738')
 
     def _get_closed_task(self, project_id='all'):
         def request_data(datetime_from, datetime_to):
@@ -58,7 +60,6 @@ class Dida365:
         tasks = []
         day_offset = 0
         while True:
-            day_offset += 1
             date = get_today_arrow().shift(days=-day_offset)
             datetime_from = date.replace(hour=0, minute=0, second=0)
             datetime_to = date.replace(hour=23, minute=59, second=59)
@@ -73,6 +74,7 @@ class Dida365:
                     tasks.extend(data)
             else:
                 tasks.extend(data)
+            day_offset += 1
             if date.year == 2023 and date.month == 1 and date.day == 1:
                 break
         self.closed_task = [Task(i) for i in tasks]
