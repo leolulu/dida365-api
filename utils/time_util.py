@@ -9,6 +9,10 @@ def get_utc_str(arrow_time):
     return arrow_time.format('YYYY-MM-DDTHH:mm:ssZ')
 
 
+def get_standard_str(arrow_time):
+    return arrow_time.format('YYYY-MM-DD HH:mm:ss')
+
+
 def get_today_arrow():
     return arrow.get(arrow.now().format("YYYY-MM-DD")).replace(tzinfo='Asia/Shanghai')
 
