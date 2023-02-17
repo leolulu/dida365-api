@@ -92,7 +92,7 @@ class DidaManipulate:
                 backlink_section_str = BackLinkUtil.gen_backlink_section(target_task_backlinks)
                 if if_add_section:
                     content = "" if target_task.content is None else target_task.content
-                    content += "\n\n\n"
+                    content += "\n"
                     content += backlink_section_str
                 else:
                     content = "" if target_task.content is None else target_task.content
