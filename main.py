@@ -102,10 +102,22 @@ class DidaManipulate:
                     self.dida.update_task(Task.gen_update_date_payload(target_task.task_dict))
                     print(f'{"Create" if if_add_section else "Update"} backlink: [{target_task.title}] <- [{task.title}]')
 
+    def reset_all_backlinks(self):
+        """Use with caution!!!
+        """
+        for task in [i for i in self.dida.active_tasks if i.project_id == '670946db840bf3f353ab7738']:
+            if re.search(BackLinkUtil.SECTION_PATTERN, task.content):
+                content = re.sub(BackLinkUtil.SECTION_PATTERN, "", task.content)
+                task.update_content(content)
+                self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
+                print(f"Reset backlink in task: {task.title}")
+
 
 if __name__ == '__main__':
     dm = DidaManipulate()
-    dm.build_backlink()
+    dm.reset_all_backlinks()
+
+    # dm.build_backlink()
 
     # dm.perpetuate_task()
 
