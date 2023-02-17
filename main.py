@@ -2,8 +2,11 @@ import random
 import re
 
 from api.dida365 import Dida365
+from models.backlink import BackLink
+from models.link import Link
 from models.target_date import TargetDate
 from models.task import Task
+from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
 from utils.task_selector import TaskSelector
 from utils.time_util import get_days_offset, get_today_arrow
@@ -17,7 +20,7 @@ class DidaManipulate:
         self.dida = Dida365()
         self.today_arrow = get_today_arrow()
 
-    def get_target_words_task(self, start_day_offset):
+    def _get_target_words_task(self, start_day_offset):
         def condition(task: Task):
             return (
                 task.repeat_flag
@@ -33,7 +36,8 @@ class DidaManipulate:
         tasks = filter(lambda task: condition(task), tasks)
         self.target_tasks = list(tasks)
 
-    def reallocate_task(self, selector):
+    def reallocate_task(self, start_day_offset, selector):
+        self._get_target_words_task(start_day_offset)
         task_len = len(self.target_tasks)
         reallocation_len = task_len-DidaManipulate.QUANTITY_LIMIT
         if task_len > DidaManipulate.QUANTITY_LIMIT:
@@ -62,10 +66,47 @@ class DidaManipulate:
             print(f"Perpetuate task: {task.title}")
             self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
 
+    def build_backlink(self):
+        for task in [i for i in self.dida.active_tasks if i.project_id == '670946db840bf3f353ab7738']:
+            # if not re.match("双链测试任务", task.title):
+            #     continue
+            normal_links = Link.dedup_link_with_wls(task._backlink_util.parse_normal_links())
+            for normal_link in normal_links:
+                target_tasks = [i for i in self.dida.active_tasks if i.id == normal_link.link_task_id]
+                target_task = target_tasks[0]
+                if len(target_tasks) > 1:
+                    raise UserWarning(f"Task id duplicates, id: {normal_link.link_task_id}")
+                target_task_backlinks = target_task.backlinks
+                if len(target_task_backlinks) == 0:
+                    if_add_section = True
+                else:
+                    if_add_section = False
+                task_link = Link.create_link_from_task(task)
+                backlink = BackLink(task_link)
+                if backlink not in target_task_backlinks:
+                    backlink.add_whole_line_str(normal_link.whole_line_str)
+                    target_task_backlinks.append(backlink)
+                else:
+                    backlink = target_task_backlinks[target_task_backlinks.index(backlink)]
+                    backlink.add_whole_line_str(normal_link.whole_line_str)
+                backlink_section_str = BackLinkUtil.gen_backlink_section(target_task_backlinks)
+                if if_add_section:
+                    content = "" if target_task.content is None else target_task.content
+                    content += "\n\n\n"
+                    content += backlink_section_str
+                else:
+                    content = "" if target_task.content is None else target_task.content
+                    content = re.sub(BackLinkUtil.SECTION_PATTERN, backlink_section_str, content)
+                if target_task.content != content:
+                    target_task.update_content(content)
+                    self.dida.update_task(Task.gen_update_date_payload(target_task.task_dict))
+                    print(f'{"Create" if if_add_section else "Update"} backlink: [{target_task.title}] <- [{task.title}]')
+
 
 if __name__ == '__main__':
     dm = DidaManipulate()
-    # dm.get_target_words_task(TargetDate.TODAY)
-    # dm.reallocate_task(TaskSelector.EARLY_GROUP_ROUND_ROBIN)
+    dm.build_backlink()
 
-    dm.perpetuate_task()
+    # dm.perpetuate_task()
+
+    # dm.reallocate_task(TargetDate.TOMARROW, TaskSelector.EARLIEST_START_DATE)

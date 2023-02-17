@@ -2,14 +2,15 @@ import re
 
 
 class Link:
-    LINKS_PATTERN = r"(.*(\[.*\]\(.*\)).*)"
-    LINK_PATTERN = r"\[(.*)\]\((.*)\)"
+    LINK_LINES_PATTERN = r"(.*\[.*\]\(.*\).*)"
+    LINK_STR_PATTERN = r"(\[.*?\]\(.*?\))"
+    LINK_PATTERN = r"\[(.*?)\]\((.*?)\)"
     URL_PATTERN = r"https://dida365.com/webapp/#p/(.*)/tasks/(.*)"
     LINK_TEMPLATE = "https://dida365.com/webapp/#p/{project_id}/tasks/{task_id}"
 
     def __init__(self, link_str) -> None:
         self.link_str = link_str
-        self.parse_link()
+        self._parse_link()
 
     def __eq__(self, __o: object) -> bool:
         if isinstance(__o, Link):
@@ -23,7 +24,7 @@ class Link:
     def add_whole_line_str(self, whole_line_str):
         self.whole_line_str = whole_line_str
 
-    def parse_link(self):
+    def _parse_link(self):
         results_obj = re.findall(Link.LINK_PATTERN, self.link_str)
         self.link_name, self.link_url = results_obj[0]
         result2_obj = re.findall(Link.URL_PATTERN, self.link_url)
@@ -31,17 +32,37 @@ class Link:
 
     @staticmethod
     def parse_links(links_str):
-        results = re.findall(Link.LINKS_PATTERN, links_str)
+        lines = re.findall(Link.LINK_LINES_PATTERN, links_str)
         links = []
-        for result in results:
-            whole_line_str = result[0]
-            link_str = result[1]
-            link = Link(link_str)
-            link.add_whole_line_str(whole_line_str)
-            links.append(link)
+        for whole_line_str in lines:
+            whole_line_str = whole_line_str.strip()
+            results = re.findall(Link.LINK_STR_PATTERN, whole_line_str)
+            for result in results:
+                link = Link(result)
+                link.add_whole_line_str(whole_line_str)
+                links.append(link)
         return links
 
     @staticmethod
-    def create_link(task):
+    def dedup_link_with_wls(links):
+        deduped_links = []
+        _link_identifiers = set()
+        for link in links:
+            link_task_id = link.link_task_id
+            try:
+                link_whole_line_str = link.whole_line_str
+            except:
+                link_whole_line_str = ""
+            link_identifier = link_task_id + link_whole_line_str
+            if link_identifier not in _link_identifiers:
+                deduped_links.append(link)
+                _link_identifiers.add(link_identifier)
+        return deduped_links
+
+    @staticmethod
+    def create_link_from_task(task):
         link_str = f"[{task.title}]({task.url})"
         return Link(link_str)
+
+    def gen_link_str(self):
+        return f"[{self.link_name}]({self.link_url})"

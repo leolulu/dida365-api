@@ -1,6 +1,5 @@
-import json
-
 from models.link import Link
+from utils.backlink_util import BackLinkUtil
 from utils.time_util import get_prc_arrow, get_utc_str
 
 
@@ -34,7 +33,7 @@ class Task:
         self.url = Link.LINK_TEMPLATE.format(project_id=self.project_id, task_id=self.id)
         self.project_name = None
         self.title = self.task_dict.get(Task.TITLE)
-        self.content = self.task_dict.get(Task.CONTENT)
+        self._load_field_content()
         self.start_date = self.task_dict.get(Task.START_DATE)
         self.modified_time = self.task_dict.get(Task.MODIFIED_TIME)
         self.created_time = self.task_dict.get(Task.CREATED_TIME)
@@ -44,6 +43,15 @@ class Task:
         self.kind = self.task_dict.get(Task.KIND)
         self.completed_time = self.task_dict.get(Task.COMPLETED_TIME)
         self.status = self.task_dict.get(Task.STATUS)
+        self._backlink_util = BackLinkUtil(self)
+        self.backlinks = self._backlink_util.backlinks
+
+    def _load_field_content(self):
+        content = self.task_dict.get(Task.CONTENT)
+        if content:
+            content = content.replace('\r\n', '\n')
+            self.task_dict[Task.CONTENT] = content
+        self.content = content
 
     def _datetime_format(self):
         if self.start_date:
