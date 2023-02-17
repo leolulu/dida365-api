@@ -27,7 +27,7 @@ class BackLink:
         backlink_section_str = ""
         backlink_section_str += BackLink.LEVEL1_LIST
         backlink_section_str += self.link.gen_link_str()
-        for whole_line_str in self.whole_line_strs:
+        for whole_line_str in sorted(self.whole_line_strs):
             backlink_section_str += '\n'
             backlink_section_str += BackLink.LEVEL2_LIST
             backlink_section_str += whole_line_str
