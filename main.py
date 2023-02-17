@@ -115,10 +115,6 @@ class DidaManipulate:
 
 if __name__ == '__main__':
     dm = DidaManipulate()
-    dm.reset_all_backlinks()
-
-    # dm.build_backlink()
-
-    # dm.perpetuate_task()
-
+    dm.perpetuate_task()
+    dm.build_backlink()
     # dm.reallocate_task(TargetDate.TOMARROW, TaskSelector.EARLIEST_START_DATE)
