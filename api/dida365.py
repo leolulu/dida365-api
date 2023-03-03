@@ -9,8 +9,9 @@ from utils.time_util import get_standard_str, get_today_arrow
 
 
 class Dida365:
-    def __init__(self, if_get_closed_task=True) -> None:
+    def __init__(self, if_get_closed_task=True, quick_scan_closed_task=False) -> None:
         self.if_get_closed_task = if_get_closed_task
+        self.quick_scan_closed_task = quick_scan_closed_task
         self.session = requests.Session()
         self.base_url = 'https://api.dida365.com/api/v2'
         self.headers = {
@@ -60,6 +61,7 @@ class Dida365:
         tasks = []
         day_offset = 0
         while True:
+            deadline_date = get_today_arrow().shift(weeks=-1)
             date = get_today_arrow().shift(days=-day_offset)
             datetime_from = date.replace(hour=0, minute=0, second=0)
             datetime_to = date.replace(hour=23, minute=59, second=59)
@@ -75,8 +77,12 @@ class Dida365:
             else:
                 tasks.extend(data)
             day_offset += 1
-            if date.year == 2023 and date.month == 1 and date.day == 1:
-                break
+            if self.quick_scan_closed_task:
+                if date.year == deadline_date.year and date.month == deadline_date.month and date.day == deadline_date.day:
+                    break
+            else:
+                if date.year == 2023 and date.month == 1 and date.day == 1:
+                    break
         self.closed_task = [Task(i) for i in tasks]
 
     def enrich_info(self):

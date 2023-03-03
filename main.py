@@ -17,8 +17,8 @@ class DidaManipulate:
     PROJECT_WORDS = b'\xe8\x83\x8c\xe5\x8d\x95\xe8\xaf\x8d'
     QUANTITY_LIMIT = 40  # TODO: use local only config file to control
 
-    def __init__(self) -> None:
-        self.dida = Dida365()
+    def __init__(self, quick_scan_closed_task=False) -> None:
+        self.dida = Dida365(quick_scan_closed_task=quick_scan_closed_task)
         self.today_arrow = get_today_arrow()
 
     def _get_target_words_task(self, start_day_offset):
@@ -120,7 +120,7 @@ class DidaManipulate:
 
 
 if __name__ == '__main__':
-    dm = DidaManipulate()
+    dm = DidaManipulate(quick_scan_closed_task=True)
     try:
         dm.run()
     except TaskNotFoundException:
