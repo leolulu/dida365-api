@@ -2,6 +2,7 @@ import random
 import re
 
 from api.dida365 import Dida365
+from exceptions.backlink_exceptions import TaskNotFoundException
 from models.backlink import BackLink
 from models.link import Link
 from models.target_date import TargetDate
@@ -14,7 +15,7 @@ from utils.time_util import get_days_offset, get_today_arrow
 
 class DidaManipulate:
     PROJECT_WORDS = b'\xe8\x83\x8c\xe5\x8d\x95\xe8\xaf\x8d'
-    QUANTITY_LIMIT = 20  # TODO: use local only config file to control
+    QUANTITY_LIMIT = 40  # TODO: use local only config file to control
 
     def __init__(self) -> None:
         self.dida = Dida365()
@@ -68,11 +69,11 @@ class DidaManipulate:
 
     def build_backlink(self):
         for task in [i for i in self.dida.active_tasks if i.project_id == '670946db840bf3f353ab7738']:
-            # if not re.match("双链测试任务", task.title):
-            #     continue
             normal_links = Link.dedup_link_with_wls(task._backlink_util.parse_normal_links())
             for normal_link in normal_links:
                 target_tasks = [i for i in self.dida.active_tasks if i.id == normal_link.link_task_id]
+                if len(target_tasks) == 0:
+                    raise TaskNotFoundException()
                 target_task = target_tasks[0]
                 if len(target_tasks) > 1:
                     raise UserWarning(f"Task id duplicates, id: {normal_link.link_task_id}")
@@ -112,9 +113,15 @@ class DidaManipulate:
                 self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
                 print(f"Reset backlink in task: {task.title}")
 
+    def run(self):
+        self.perpetuate_task()
+        self.build_backlink()
+        self.reallocate_task(TargetDate.TOMARROW, TaskSelector.EARLY_GROUP_ROUND_ROBIN)
+
 
 if __name__ == '__main__':
     dm = DidaManipulate()
-    dm.perpetuate_task()
-    dm.build_backlink()
-    # dm.reallocate_task(TargetDate.TOMARROW, TaskSelector.EARLIEST_START_DATE)
+    try:
+        dm.run()
+    except TaskNotFoundException:
+        dm.run()
