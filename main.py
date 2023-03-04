@@ -10,7 +10,7 @@ from models.target_date import TargetDate
 from models.task import Task
 from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
-from utils.online_dict_util import FreeDictionary
+from utils.dict_util import FreeDictionary, BaiduFanyi
 from utils.task_selector import TaskSelector
 from utils.time_util import get_days_offset, get_today_arrow
 
@@ -125,11 +125,13 @@ class DidaManipulate:
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
             title = word+"📌"
             new_task_dict[Task.TITLE] = title
-            fd = FreeDictionary(word)
+            fd = BaiduFanyi(word)
             if fd.if_definitions_found:
                 new_task_dict[Task.CONTENT] = fd.phonetic_string
             print(f"Add ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
+        if hasattr(BaiduFanyi, 'EDGE_BROWSER'):
+            BaiduFanyi.EDGE_BROWSER.close()
 
     def add_new_ebbinghaus_tasks_by_file(self):
         words_path = r"C:\Users\pro3\Downloads\words.txt"
