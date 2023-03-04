@@ -10,6 +10,7 @@ from models.target_date import TargetDate
 from models.task import Task
 from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
+from utils.online_dict_util import FreeDictionary
 from utils.task_selector import TaskSelector
 from utils.time_util import get_days_offset, get_today_arrow
 
@@ -128,9 +129,12 @@ class DidaManipulate:
         words = [i.strip().lower() for i in data if i.strip() != '']
         for word in words:
             new_task_dict = copy.deepcopy(template_task.task_dict)
-            new_task_dict['id'] = new_task_dict['id']+'z'
+            new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
             title = word+"📌"
-            new_task_dict['title'] = title
+            new_task_dict[Task.TITLE] = title
+            fd = FreeDictionary(word)
+            if fd.if_definitions_found:
+                new_task_dict[Task.CONTENT] = fd.phonetic_string
             print(f"Add ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
 
