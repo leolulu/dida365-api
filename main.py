@@ -126,7 +126,7 @@ class DidaManipulate:
         with open(words_path, 'r', encoding='utf-8') as f:
             data = f.read().strip().split('\n')
         words = [i.strip().lower() for i in data if i.strip() != '']
-        for word in words[:10]:
+        for word in words:
             new_task_dict = copy.deepcopy(template_task.task_dict)
             new_task_dict['id'] = new_task_dict['id']+'z'
             title = word+"📌"
