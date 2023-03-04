@@ -1,4 +1,5 @@
-import random
+import copy
+import os
 import re
 
 from api.dida365 import Dida365
@@ -47,7 +48,7 @@ class DidaManipulate:
             for task in task_selector.select_task(selector):
                 task.shift_start_date(1)
                 print(f"Change start_date from [{task.org_start_date}] to [{task.shifted_start_date}], task created_time is [{task.created_time}], title is [{task.title}]")
-                self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
+                self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
         else:
             print(f"Task quantity less than {DidaManipulate.QUANTITY_LIMIT}, skip reallocation.")
 
@@ -65,7 +66,7 @@ class DidaManipulate:
         for task in tasks_to_perpetuate:
             task.perpetuate_task()
             print(f"Perpetuate task: {task.title}")
-            self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
+            self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
 
     def build_backlink(self):
         for task in [i for i in self.dida.active_tasks if i.project_id == '670946db840bf3f353ab7738']:
@@ -100,7 +101,7 @@ class DidaManipulate:
                     content = re.sub(BackLinkUtil.SECTION_PATTERN, backlink_section_str, content)
                 if target_task.content != content:
                     target_task.update_content(content)
-                    self.dida.update_task(Task.gen_update_date_payload(target_task.task_dict))
+                    self.dida.post_task(Task.gen_update_date_payload(target_task.task_dict))
                     print(f'{"Create" if if_add_section else "Update"} backlink: [{target_task.title}] <- [{task.title}]')
 
     def reset_all_backlinks(self):
@@ -110,8 +111,28 @@ class DidaManipulate:
             if re.search(BackLinkUtil.SECTION_PATTERN, task.content):
                 content = re.sub(BackLinkUtil.SECTION_PATTERN, "", task.content)
                 task.update_content(content)
-                self.dida.update_task(Task.gen_update_date_payload(task.task_dict))
+                self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
                 print(f"Reset backlink in task: {task.title}")
+
+    def add_new_ebbinghaus_tasks(self):
+        words_path = r"C:\Users\pro3\Downloads\words.txt"
+        if not os.path.exists(words_path):
+            print(f"No words.txt in {words_path}, skip adding new ebbinghaus tasks.")
+            return
+        template_tasks = [i for i in self.dida.active_tasks if i.title == '模板']
+        if len(template_tasks) != 1:
+            raise UserWarning(f"Template task duplicated, count: {len(template_tasks)}")
+        template_task = template_tasks[0]
+        with open(words_path, 'r', encoding='utf-8') as f:
+            data = f.read().strip().split('\n')
+        words = [i.strip().lower() for i in data if i.strip() != '']
+        for word in words[:10]:
+            new_task_dict = copy.deepcopy(template_task.task_dict)
+            new_task_dict['id'] = new_task_dict['id']+'z'
+            title = word+"📌"
+            new_task_dict['title'] = title
+            print(f"Add ebbinghaus task: {title}")
+            self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
 
     def run(self):
         self.perpetuate_task()
@@ -121,7 +142,8 @@ class DidaManipulate:
 
 if __name__ == '__main__':
     dm = DidaManipulate(quick_scan_closed_task=True)
-    try:
-        dm.run()
-    except TaskNotFoundException:
-        dm.run()
+    dm.add_new_ebbinghaus_tasks()
+    # try:
+    #     dm.run()
+    # except TaskNotFoundException:
+    #     dm.run()

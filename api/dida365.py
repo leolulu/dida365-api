@@ -101,7 +101,7 @@ class Dida365:
         projects = self.data['projectProfiles']
         self.projects = [Project(i) for i in projects]
 
-    def update_task(self, payload):
+    def post_task(self, payload):
         url = self.base_url + "/batch/task"
         data = json.dumps(payload)
         r = self.session.request("POST", url, headers=self.headers, data=data)

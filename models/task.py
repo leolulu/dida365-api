@@ -68,14 +68,26 @@ class Task:
             self.completed_time = get_prc_arrow(self.completed_time)
 
     @staticmethod
-    def gen_update_date_payload(new_task_dict):
+    def _gen_post_task_payload():
         payload = dict()
         payload['add'] = []
-        payload['delete'] = []
         payload['addAttachments'] = []
-        payload['updateAttachments'] = []
+        payload['delete'] = []
         payload['deleteAttachments'] = []
+        payload['update'] = []
+        payload['updateAttachments'] = []
+        return payload
+
+    @staticmethod
+    def gen_update_date_payload(new_task_dict):
+        payload = Task._gen_post_task_payload()
         payload['update'] = [new_task_dict]
+        return payload
+
+    @staticmethod
+    def gen_add_date_payload(new_task_dict):
+        payload = Task._gen_post_task_payload()
+        payload['add'] = [new_task_dict]
         return payload
 
     def shift_start_date(self, days):
