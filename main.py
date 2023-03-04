@@ -115,18 +115,11 @@ class DidaManipulate:
                 self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
                 print(f"Reset backlink in task: {task.title}")
 
-    def add_new_ebbinghaus_tasks(self):
-        words_path = r"C:\Users\pro3\Downloads\words.txt"
-        if not os.path.exists(words_path):
-            print(f"No words.txt in {words_path}, skip adding new ebbinghaus tasks.")
-            return
+    def _add_new_ebbinghaus_tasks(self, words):
         template_tasks = [i for i in self.dida.active_tasks if i.title == '模板']
         if len(template_tasks) != 1:
             raise UserWarning(f"Template task duplicated, count: {len(template_tasks)}")
         template_task = template_tasks[0]
-        with open(words_path, 'r', encoding='utf-8') as f:
-            data = f.read().strip().split('\n')
-        words = [i.strip().lower() for i in data if i.strip() != '']
         for word in words:
             new_task_dict = copy.deepcopy(template_task.task_dict)
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
@@ -138,6 +131,20 @@ class DidaManipulate:
             print(f"Add ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
 
+    def add_new_ebbinghaus_tasks_by_file(self):
+        words_path = r"C:\Users\pro3\Downloads\words.txt"
+        if not os.path.exists(words_path):
+            print(f"No words.txt in {words_path}, skip adding new ebbinghaus tasks.")
+            return
+        with open(words_path, 'r', encoding='utf-8') as f:
+            data = f.read().strip().split('\n')
+        words = [i.strip().lower() for i in data if i.strip() != '']
+        self._add_new_ebbinghaus_tasks(words)
+
+    def add_new_ebbinghaus_tasks_by_input(self):
+        word = input('Please input new word:')
+        self._add_new_ebbinghaus_tasks([word])
+
     def run(self):
         self.perpetuate_task()
         self.build_backlink()
@@ -146,7 +153,7 @@ class DidaManipulate:
 
 if __name__ == '__main__':
     dm = DidaManipulate(quick_scan_closed_task=True)
-    dm.add_new_ebbinghaus_tasks()
+    dm.add_new_ebbinghaus_tasks_by_input()
     # try:
     #     dm.run()
     # except TaskNotFoundException:
