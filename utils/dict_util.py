@@ -63,6 +63,13 @@ class BaiduFanyi:
         self.edge_browser = BaiduFanyi.EDGE_BROWSER
         self.if_definitions_found = False
         self._get_phonetic(word)
+        if self.if_definitions_found:
+            self._get_definition()
+
+    def _get_definition(self):
+        definitions = [i.text for i in self.edge_browser.find_elements('xpath', r"//div[@class='dictionary-comment']/*")]
+        definitions = [i.strip().replace('\n', ' ').replace(';', '，') for i in definitions]
+        self.definitions = "\n".join(definitions)
 
     def _get_phonetic(self, word):
         def format_phonetic(p):
@@ -71,26 +78,25 @@ class BaiduFanyi:
             if p[-1] != ']':
                 p = p+']'
             return p
-        
+
         def parse_page():
             types = [i.text for i in self.edge_browser.find_elements('xpath', r"//label[@class='op-sound-wrap']/span")]
             types = [i.replace(r'/', '').strip() for i in types]
             phonetics = [i.text for i in self.edge_browser.find_elements('xpath', r"//label[@class='op-sound-wrap']/b")]
             phonetics = [format_phonetic(i) for i in phonetics]
-            return list(zip(types,phonetics))
-
+            return list(zip(types, phonetics))
 
         try:
             self.edge_browser.get(BaiduFanyi.URL.format(word=word))
             phonetics_info = []
-            for _ in range(6):
+            for _ in range(30):
                 phonetics_info = parse_page()
-                if len(phonetics_info)==0:
-                    time.sleep(5)
+                if len(phonetics_info) == 0:
+                    time.sleep(1)
                 else:
                     break
-            if len(phonetics_info)>0:
-                self.phonetic_string = " ".join([f"{i[0]}{i[-1]}" for i in phonetics_info])
+            if len(phonetics_info) > 0:
+                self.phonetic_string = "   ".join([f"{i[0]}{i[-1]}" for i in phonetics_info])
                 self.if_definitions_found = True
         except:
             traceback.print_exc()

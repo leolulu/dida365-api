@@ -19,8 +19,8 @@ class DidaManipulate:
     PROJECT_WORDS = b'\xe8\x83\x8c\xe5\x8d\x95\xe8\xaf\x8d'
     QUANTITY_LIMIT = 40  # TODO: use local only config file to control
 
-    def __init__(self, quick_scan_closed_task=False) -> None:
-        self.dida = Dida365(quick_scan_closed_task=quick_scan_closed_task)
+    def __init__(self, if_get_closed_task=True, quick_scan_closed_task=False) -> None:
+        self.dida = Dida365(if_get_closed_task, quick_scan_closed_task)
         self.today_arrow = get_today_arrow()
 
     def _get_target_words_task(self, start_day_offset):
@@ -125,9 +125,9 @@ class DidaManipulate:
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
             title = word+"📌"
             new_task_dict[Task.TITLE] = title
-            fd = BaiduFanyi(word)
-            if fd.if_definitions_found:
-                new_task_dict[Task.CONTENT] = fd.phonetic_string
+            bf = BaiduFanyi(word)
+            if bf.if_definitions_found:
+                new_task_dict[Task.CONTENT] = bf.phonetic_string + "\n" + bf.definitions + "\n"
             print(f"Add ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
         if hasattr(BaiduFanyi, 'EDGE_BROWSER'):
@@ -144,7 +144,7 @@ class DidaManipulate:
         self._add_new_ebbinghaus_tasks(words)
 
     def add_new_ebbinghaus_tasks_by_input(self):
-        word = input('Please input new word:')
+        word = input('Please input new word: ')
         self._add_new_ebbinghaus_tasks([word])
 
     def run(self):
@@ -154,7 +154,7 @@ class DidaManipulate:
 
 
 if __name__ == '__main__':
-    dm = DidaManipulate(quick_scan_closed_task=True)
+    dm = DidaManipulate(if_get_closed_task=False, quick_scan_closed_task=True)
     dm.add_new_ebbinghaus_tasks_by_input()
     # try:
     #     dm.run()
