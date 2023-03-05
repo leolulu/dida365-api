@@ -10,7 +10,8 @@ from models.target_date import TargetDate
 from models.task import Task
 from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
-from utils.dict_util import FreeDictionary, BaiduFanyi
+from utils.decorator_util import ensure_run_retry
+from utils.dict_util import BaiduFanyi
 from utils.task_selector import TaskSelector
 from utils.time_util import get_days_offset, get_today_arrow
 
@@ -147,6 +148,7 @@ class DidaManipulate:
         word = input('Please input new word: ')
         self._add_new_ebbinghaus_tasks([word])
 
+    @ensure_run_retry
     def run(self):
         self.perpetuate_task()
         self.build_backlink()
@@ -156,7 +158,4 @@ class DidaManipulate:
 if __name__ == '__main__':
     dm = DidaManipulate(if_get_closed_task=False, quick_scan_closed_task=True)
     dm.add_new_ebbinghaus_tasks_by_input()
-    # try:
-    #     dm.run()
-    # except TaskNotFoundException:
-    #     dm.run()
+    # dm.run()
