@@ -1,11 +1,9 @@
 import traceback
 from typing import Callable
 
-from main import DidaManipulate
-
 
 def ensure_run_retry(run: Callable):
-    def wrapper(self: DidaManipulate):
+    def wrapper(self):
         try:
             run()
         except:
