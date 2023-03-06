@@ -89,7 +89,7 @@ class BaiduFanyi:
         try:
             self.edge_browser.get(BaiduFanyi.URL.format(word=word))
             phonetics_info = []
-            for _ in range(30):
+            for _ in range(60):
                 phonetics_info = parse_page()
                 if len(phonetics_info) == 0:
                     time.sleep(1)

@@ -1,6 +1,7 @@
 import copy
 import os
 import re
+from time import sleep
 
 from api.dida365 import Dida365
 from exceptions.backlink_exceptions import TaskNotFoundException
@@ -8,10 +9,12 @@ from models.backlink import BackLink
 from models.link import Link
 from models.target_date import TargetDate
 from models.task import Task
+from models.attachment import Attachment
 from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
 from utils.decorator_util import ensure_run_retry
 from utils.dict_util import BaiduFanyi
+from utils.dictvoice_util import get_dictvoice_bytes
 from utils.task_selector import TaskSelector
 from utils.time_util import get_days_offset, get_today_arrow
 
@@ -116,11 +119,16 @@ class DidaManipulate:
                 self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
                 print(f"Reset backlink in task: {task.title}")
 
+    def find_task(self, task_title, if_reload_data=False):
+        if if_reload_data:
+            self.dida.get_latest_data()
+        tasks = [i for i in self.dida.active_tasks if i.title == task_title]
+        if len(tasks) != 1:
+            raise UserWarning(f"Task with title[{task_title}] duplicated, count: {len(tasks)}")
+        return tasks[0]
+
     def _add_new_ebbinghaus_tasks(self, words):
-        template_tasks = [i for i in self.dida.active_tasks if i.title == '模板']
-        if len(template_tasks) != 1:
-            raise UserWarning(f"Template task duplicated, count: {len(template_tasks)}")
-        template_task = template_tasks[0]
+        template_task = self.find_task('模板v2')
         for word in words:
             new_task_dict = copy.deepcopy(template_task.task_dict)
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
@@ -131,8 +139,48 @@ class DidaManipulate:
                 new_task_dict[Task.CONTENT] = bf.phonetic_string + "\n" + bf.definitions + "\n"
             print(f"Add ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
+            # Upload attachment
+            task = self.find_task(title, if_reload_data=True)
+            task.add_upload_attachment_post_payload_by_bytes(*get_dictvoice_bytes(word))
+            dm.dida.upload_attachment(*task.attachments_to_upload)
+            print(f"Add dictvoice for task: {title}")
+            # put dictvoice ahead
+            self.rearrange_content_put_dictvoice_ahead(title)
+
         if hasattr(BaiduFanyi, 'EDGE_BROWSER'):
             BaiduFanyi.EDGE_BROWSER.close()
+
+    def rearrange_content_put_dictvoice_ahead(self, title):
+        print("Begin to rearrange content to put dictvoice ahead.")
+        n = 0
+        max_retry_times = 30
+        while n < max_retry_times:
+            task = self.find_task(title, if_reload_data=True)
+            content = task.content
+            if re.search(Attachment.FILE_PATTERN, content):
+                file_strings = re.findall(Attachment.FILE_PATTERN, content)
+                new_content = re.sub(Attachment.FILE_PATTERN, "", content).strip()
+                first_line_of_content, rest_of_content = new_content.split('\n', 1)
+                if re.search(r"英\[|美\[", first_line_of_content):
+                    new_content = '\n'.join([
+                        first_line_of_content,
+                        *file_strings,
+                        rest_of_content
+                    ])
+                else:
+                    for file_string in file_strings[::-1]:
+                        new_content = file_string + '\n' + new_content
+                task.update_content(new_content)
+                self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
+                break
+            else:
+                n += 1
+                print(f"Searching for {n} times.")
+                sleep(10)
+        if n >= max_retry_times:
+            print("Can't find attachments, content not rearranged.")
+        else:
+            print("Content rearranged, put dictvoice ahead.")
 
     def add_new_ebbinghaus_tasks_by_file(self):
         words_path = r"C:\Users\pro3\Downloads\words.txt"

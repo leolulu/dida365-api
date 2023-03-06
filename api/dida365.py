@@ -1,6 +1,10 @@
+import copy
+from io import BufferedReader
 import json
+import uuid
 
 import requests
+from models.attachment import Attachment
 from models.project import Project
 from models.task import Task
 
@@ -105,4 +109,31 @@ class Dida365:
         url = self.base_url + "/batch/task"
         data = json.dumps(payload)
         r = self.session.request("POST", url, headers=self.headers, data=data)
-        r.raise_for_status
+        r.raise_for_status()
+
+    def upload_attachment(self, *attachments: Attachment):
+        for attachment in attachments:
+            url = "https://api.dida365.com/api/v1/attachment/upload/{project_id}/{task_id}/{uuid}".format(
+                project_id=attachment.project_id,
+                  task_id=attachment.task_id,
+                  uuid=uuid.uuid1().hex
+            )
+            if attachment.file_bytes is not None:
+                f = attachment.file_bytes
+            elif attachment.file_path is not None:
+                f = open(attachment.file_path, 'rb')
+            else:
+                raise UserWarning(f"Attachment without neither file bytes nor file path!")
+            files = [
+                ('file', (attachment.file_name, f, 'application/octet-stream'))
+            ]
+            headers = copy.copy(self.headers)
+            headers.pop('content-type')
+            try:
+                r = self.session.request("POST", url, headers=headers, data={}, files=files)
+                r.raise_for_status()
+            except:
+                raise
+            finally:
+                if isinstance(f, BufferedReader):
+                    f.close()
