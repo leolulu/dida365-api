@@ -138,7 +138,7 @@ class DidaManipulate:
             bf = BaiduFanyi(word)
             if bf.if_definitions_found:
                 new_task_dict[Task.CONTENT] = bf.phonetic_string + "\n" + bf.definitions + "\n"
-            print(f"Add ebbinghaus task: {title}")
+            print(f"\nAdd ebbinghaus task: {title}")
             self.dida.post_task(Task.gen_add_date_payload(new_task_dict))
             # Upload attachment
             task = self.find_task(title, if_reload_data=True)
@@ -178,9 +178,9 @@ class DidaManipulate:
                 print(f"Searching for {n} times.")
                 sleep(10)
         if n >= max_retry_times:
-            print("Can't find attachments, content not rearranged.")
+            print("Can't find attachments, content not rearranged.\n")
         else:
-            print("Content rearranged, put dictvoice ahead.")
+            print("Content rearranged, put dictvoice ahead.\n")
 
     def add_new_ebbinghaus_tasks_by_file(self):
         words_path = r"C:\Users\pro3\Downloads\words.txt"
