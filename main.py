@@ -130,6 +130,7 @@ class DidaManipulate:
     def _add_new_ebbinghaus_tasks(self, words):
         template_task = self.find_task('模板版本二')
         for word in words:
+            word = word.lower()
             new_task_dict = copy.deepcopy(template_task.task_dict)
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
             title = word+"📌"
@@ -146,7 +147,6 @@ class DidaManipulate:
             print(f"Add dictvoice for task: {title}")
             # put dictvoice ahead
             self.rearrange_content_put_dictvoice_ahead(title)
-
         if hasattr(BaiduFanyi, 'EDGE_BROWSER'):
             BaiduFanyi.EDGE_BROWSER.close()
 
