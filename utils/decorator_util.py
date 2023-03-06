@@ -5,10 +5,10 @@ from typing import Callable
 def ensure_run_retry(run: Callable):
     def wrapper(self):
         try:
-            run()
+            run(self)
         except:
             traceback.print_exc()
             self.dida.get_latest_data()
-            run()
+            run(self)
         return run()
     return wrapper
