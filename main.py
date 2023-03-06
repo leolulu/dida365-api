@@ -128,7 +128,7 @@ class DidaManipulate:
         return tasks[0]
 
     def _add_new_ebbinghaus_tasks(self, words):
-        template_task = self.find_task('模板v2')
+        template_task = self.find_task('模板版本二')
         for word in words:
             new_task_dict = copy.deepcopy(template_task.task_dict)
             new_task_dict[Task.ID] = new_task_dict[Task.ID]+'z'
