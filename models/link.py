@@ -37,6 +37,7 @@ class Link:
         for whole_line_str in lines:
             whole_line_str = whole_line_str.strip()
             results = re.findall(Link.LINK_STR_PATTERN, whole_line_str)
+            results = [i for i in results if "[file]" not in i]
             for result in results:
                 link = Link(result)
                 link.add_whole_line_str(whole_line_str)
