@@ -2,7 +2,7 @@ import os
 from typing import Optional
 
 
-class Attachment:
+class uploadAttachment:
     FILE_PATTERN = r"(\!\[file\]\(.*?\))"
 
     def __init__(self, task, file_bytes_obj: Optional[tuple] = None, file_path: Optional[str] = None) -> None:
@@ -14,7 +14,7 @@ class Attachment:
             self.parse_file_path(file_path)
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(__o, Attachment):
+        if isinstance(__o, uploadAttachment):
             self_file_bytes = self.file_bytes if hasattr(self, 'file_bytes') else ""
             self_file_path = self.file_path if hasattr(self, 'file_path') else ""
             __o_file_bytes = __o.file_bytes if hasattr(__o, 'file_bytes') else ""

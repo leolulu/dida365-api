@@ -4,7 +4,7 @@ import json
 import uuid
 
 import requests
-from models.attachment import Attachment
+from models.upload_attachment import uploadAttachment
 from models.project import Project
 from models.task import Task
 
@@ -111,7 +111,7 @@ class Dida365:
         r = self.session.request("POST", url, headers=self.headers, data=data)
         r.raise_for_status()
 
-    def upload_attachment(self, *attachments: Attachment):
+    def upload_attachment(self, *attachments: uploadAttachment):
         for attachment in attachments:
             url = "https://api.dida365.com/api/v1/attachment/upload/{project_id}/{task_id}/{uuid}".format(
                 project_id=attachment.project_id,

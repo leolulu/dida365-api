@@ -1,4 +1,4 @@
-from models.attachment import Attachment
+from models.upload_attachment import uploadAttachment
 from models.link import Link
 from utils.backlink_util import BackLinkUtil
 from utils.time_util import get_prc_arrow, get_utc_str
@@ -114,11 +114,11 @@ class Task:
 
     def add_upload_attachment_post_payload_by_path(self, file_path):
         self.attachments_to_upload.add(
-            Attachment(self, file_path == file_path)
+            uploadAttachment(self, file_path == file_path)
         )
 
     def add_upload_attachment_post_payload_by_bytes(self, *file_bytes_objs):
         for file_bytes_obj in file_bytes_objs:
             self.attachments_to_upload.add(
-                Attachment(self, file_bytes_obj=file_bytes_obj)
+                uploadAttachment(self, file_bytes_obj=file_bytes_obj)
             )

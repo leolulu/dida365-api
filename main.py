@@ -9,7 +9,7 @@ from models.backlink import BackLink
 from models.link import Link
 from models.target_date import TargetDate
 from models.task import Task
-from models.attachment import Attachment
+from models.upload_attachment import uploadAttachment
 from utils.backlink_util import BackLinkUtil
 from utils.commom_util import groupby_func
 from utils.decorator_util import ensure_run_retry
@@ -157,9 +157,9 @@ class DidaManipulate:
         while n < max_retry_times:
             task = self.find_task(title, if_reload_data=True)
             content = task.content
-            if re.search(Attachment.FILE_PATTERN, content):
-                file_strings = re.findall(Attachment.FILE_PATTERN, content)
-                new_content = re.sub(Attachment.FILE_PATTERN, "", content).strip()
+            if re.search(uploadAttachment.FILE_PATTERN, content):
+                file_strings = re.findall(uploadAttachment.FILE_PATTERN, content)
+                new_content = re.sub(uploadAttachment.FILE_PATTERN, "", content).strip()
                 first_line_of_content, rest_of_content = new_content.split('\n', 1)
                 if re.search(r"^\[|英\[|美\[", first_line_of_content):
                     new_content = '\n'.join([
