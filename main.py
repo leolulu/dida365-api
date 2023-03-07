@@ -153,16 +153,15 @@ class DidaManipulate:
     def rearrange_content_put_dictvoice_ahead(self, title):
         def rearrange_content(content, task, file_strings):
             new_content = re.sub(uploadAttachment.FILE_PATTERN, "", content).strip()
-            first_line_of_content, rest_of_content = new_content.split('\n', 1)
-            if re.search(r"^\[|英\[|美\[", first_line_of_content):
-                new_content = '\n'.join([
-                    first_line_of_content,
-                    *file_strings,
-                    rest_of_content
-                ])
-            else:
-                for file_string in file_strings[::-1]:
-                    new_content = file_string + '\n' + new_content
+            # first_line_of_content, rest_of_content = new_content.split('\n', 1)
+            # if re.search(r"^\[|英\[|美\[", first_line_of_content):
+            #     new_content = '\n'.join([
+            #         first_line_of_content,
+            #         *file_strings,
+            #         rest_of_content
+            #     ])
+            # else:
+            new_content = "\n".join(file_strings+[new_content])
             task.update_content(new_content)
             self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
 
