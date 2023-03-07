@@ -161,7 +161,7 @@ class DidaManipulate:
                 file_strings = re.findall(Attachment.FILE_PATTERN, content)
                 new_content = re.sub(Attachment.FILE_PATTERN, "", content).strip()
                 first_line_of_content, rest_of_content = new_content.split('\n', 1)
-                if re.search(r"英\[|美\[", first_line_of_content):
+                if re.search(r"^\[|英\[|美\[", first_line_of_content):
                     new_content = '\n'.join([
                         first_line_of_content,
                         *file_strings,

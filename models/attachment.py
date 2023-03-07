@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class Attachment:
-    FILE_PATTERN = r"(\!\[.*?\]\(.*?\))"
+    FILE_PATTERN = r"(\!\[file\]\(.*?\))"
 
     def __init__(self, task, file_bytes_obj: Optional[tuple] = None, file_path: Optional[str] = None) -> None:
         self.task_id = task.id
