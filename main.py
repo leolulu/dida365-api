@@ -151,32 +151,40 @@ class DidaManipulate:
             BaiduFanyi.EDGE_BROWSER.close()
 
     def rearrange_content_put_dictvoice_ahead(self, title):
+        def rearrange_content(content, task, file_strings):
+            new_content = re.sub(uploadAttachment.FILE_PATTERN, "", content).strip()
+            first_line_of_content, rest_of_content = new_content.split('\n', 1)
+            if re.search(r"^\[|英\[|美\[", first_line_of_content):
+                new_content = '\n'.join([
+                    first_line_of_content,
+                    *file_strings,
+                    rest_of_content
+                ])
+            else:
+                for file_string in file_strings[::-1]:
+                    new_content = file_string + '\n' + new_content
+            task.update_content(new_content)
+            self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
+
         print("Begin to rearrange content to put dictvoice ahead.")
         n = 0
         max_retry_times = 30
         while n < max_retry_times:
             task = self.find_task(title, if_reload_data=True)
             content = task.content
+            attachments = task.attachments
             if re.search(uploadAttachment.FILE_PATTERN, content):
                 file_strings = re.findall(uploadAttachment.FILE_PATTERN, content)
-                new_content = re.sub(uploadAttachment.FILE_PATTERN, "", content).strip()
-                first_line_of_content, rest_of_content = new_content.split('\n', 1)
-                if re.search(r"^\[|英\[|美\[", first_line_of_content):
-                    new_content = '\n'.join([
-                        first_line_of_content,
-                        *file_strings,
-                        rest_of_content
-                    ])
-                else:
-                    for file_string in file_strings[::-1]:
-                        new_content = file_string + '\n' + new_content
-                task.update_content(new_content)
-                self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
+                rearrange_content(content, task, file_strings)
+                break
+            elif attachments:
+                file_strings = [i.content_file_string for i in attachments]
+                rearrange_content(content, task, file_strings)
                 break
             else:
                 n += 1
                 print(f"Searching for {n} times.")
-                sleep(10)
+                sleep(5)
         if n >= max_retry_times:
             print("Can't find attachments, content not rearranged.\n")
         else:

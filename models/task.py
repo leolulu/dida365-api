@@ -1,3 +1,4 @@
+from models.attachment import Attachment
 from models.upload_attachment import uploadAttachment
 from models.link import Link
 from utils.backlink_util import BackLinkUtil
@@ -20,6 +21,7 @@ class Task:
     KIND = "kind"
     COMPLETED_TIME = "completedTime"
     STATUS = "status"
+    ATTACHMENTS = "attachments"
     STATUS_ACTIVE = 0
     STATUS_COMPLETED = 2
 
@@ -46,7 +48,16 @@ class Task:
         self.status = self.task_dict.get(Task.STATUS)
         self._backlink_util = BackLinkUtil(self)
         self.backlinks = self._backlink_util.backlinks
+        self._load_field_attachments()
         self.attachments_to_upload = set()
+
+    def _load_field_attachments(self):
+        attachments = self.task_dict.get(Task.ATTACHMENTS)
+        if attachments and isinstance(attachments, list):
+            attachments = [Attachment(i) for i in attachments]
+            self.attachments = [i for i in attachments if i.is_active]
+        else:
+            self.attachments = []
 
     def _load_field_content(self):
         content = self.task_dict.get(Task.CONTENT)
