@@ -161,11 +161,11 @@ class DidaManipulate:
             #         rest_of_content
             #     ])
             # else:
-            new_content = "\n".join(file_strings+[new_content])
+            new_content = "\n".join([new_content, '\n'] + file_strings)
             task.update_content(new_content)
             self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
 
-        print("Begin to rearrange content to put dictvoice ahead.")
+        print("Begin to rearrange content to put dictvoice behind.")
         n = 0
         max_retry_times = 30
         while n < max_retry_times:
@@ -187,7 +187,7 @@ class DidaManipulate:
         if n >= max_retry_times:
             print("Can't find attachments, content not rearranged.\n")
         else:
-            print("Content rearranged, put dictvoice ahead.\n")
+            print("Content rearranged, put dictvoice behind.\n")
 
     def add_new_ebbinghaus_tasks_by_file(self):
         words_path = r"C:\Users\pro3\Downloads\words.txt"
