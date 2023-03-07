@@ -194,7 +194,7 @@ class DidaManipulate:
 
     def add_new_ebbinghaus_tasks_by_input(self):
         word = input('Please input new word: ')
-        self._add_new_ebbinghaus_tasks([word])
+        self._add_new_ebbinghaus_tasks([word.strip()])
 
     @ensure_run_retry
     def run(self):
