@@ -27,23 +27,15 @@ class DidaManipulate:
 
     def __init__(self, args: Namespace) -> None:
         self.args = args
-        if_get_closed_task, quick_scan_closed_task = self._parse_switch()
-        self.dida = Dida365(if_get_closed_task, quick_scan_closed_task)
+        quick_scan_closed_task = self._parse_switch()
+        self.dida = Dida365(quick_scan_closed_task)
         self.today_arrow = get_today_arrow()
 
     def _parse_switch(self):
-        if not (self.args.perpetuate or self.args.backlink or self.args.reallocate or self.args.default or self.args.new):
-            print("No task need to process, please refer to help to set off a task.")
-            exit(0)
-        if_get_closed_task = True
         quick_scan_closed_task = True
-        if self.args.new:
-            if_get_closed_task = False
-        if self.args.skip_get_closed_task:
-            if_get_closed_task = False
         if self.args.full_scan_closed_task:
             quick_scan_closed_task = False
-        return if_get_closed_task, quick_scan_closed_task
+        return quick_scan_closed_task
 
     def _get_target_words_task(self, start_day_offset):
         def condition(task: Task):
@@ -76,6 +68,7 @@ class DidaManipulate:
             print(f"Task quantity less than {DidaManipulate.QUANTITY_LIMIT}, skip reallocation.")
 
     def perpetuate_task(self):
+        self.dida.get_closed_task('670946db840bf3f353ab7738')
         tasks = self.dida.closed_task
         tasks_dictincted = []
         for key, value in groupby_func(tasks, lambda x: x.title).items():
@@ -244,13 +237,15 @@ class DidaManipulate:
             self.add_new_ebbinghaus_tasks_by_input()
         elif args.default:
             self.default_run(start_day_offset, selector)
-        else:
+        elif (args.perpetuate or args.backlink or args.reallocate):
             if args.perpetuate:
                 self.perpetuate_task()
             if args.backlink:
                 self.build_backlink()
             if args.reallocate:
                 self.reallocate_task(start_day_offset, selector)
+        else:
+            print("No task need to process, please refer to help to set off a task.")
 
 
 if __name__ == '__main__':
@@ -260,7 +255,6 @@ if __name__ == '__main__':
     parser.add_argument('-p', '--perpetuate', help='If perpetuate completed tasks.',  action='store_true')
     parser.add_argument('-r', '--reallocate', help='If reallocate tasks.',  action='store_true')
     parser.add_argument('-d', '--default', help='If run default procedure: 1.perpetuate_task 2.build_backlink 3.reallocate_task.',  action='store_true')
-    parser.add_argument('--skip_get_closed_task', help='If skip getting closed tasks.',  action='store_true')
     parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
     parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
     parser.add_argument('--selector', help='Choose reallocation task selector, could be one of "random_sample", "earliest_start_date", "early_group_round_robin"', default='early_group_round_robin', type=str)

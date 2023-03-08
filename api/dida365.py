@@ -13,8 +13,7 @@ from utils.time_util import get_standard_str, get_today_arrow
 
 
 class Dida365:
-    def __init__(self, if_get_closed_task=True, quick_scan_closed_task=False) -> None:
-        self.if_get_closed_task = if_get_closed_task
+    def __init__(self, quick_scan_closed_task=False) -> None:
         self.quick_scan_closed_task = quick_scan_closed_task
         self.session = requests.Session()
         self.base_url = 'https://api.dida365.com/api/v2'
@@ -47,10 +46,8 @@ class Dida365:
         self.data = json.loads(r.content)
         self._get_projects()
         self._get_task()
-        if self.if_get_closed_task:
-            self._get_closed_task('670946db840bf3f353ab7738')
 
-    def _get_closed_task(self, project_id='all'):
+    def get_closed_task(self, project_id='all'):
         def request_data(datetime_from, datetime_to):
             url = self.base_url + f"/project/{project_id}/closed"
             params = {
