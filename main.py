@@ -1,6 +1,8 @@
+import argparse
 import copy
 import os
 import re
+from argparse import Namespace
 from time import sleep
 
 from api.dida365 import Dida365
@@ -23,9 +25,25 @@ class DidaManipulate:
     PROJECT_WORDS = b'\xe8\x83\x8c\xe5\x8d\x95\xe8\xaf\x8d'
     QUANTITY_LIMIT = 40  # TODO: use local only config file to control
 
-    def __init__(self, if_get_closed_task=True, quick_scan_closed_task=False) -> None:
+    def __init__(self, args: Namespace) -> None:
+        self.args = args
+        if_get_closed_task, quick_scan_closed_task = self._parse_switch()
         self.dida = Dida365(if_get_closed_task, quick_scan_closed_task)
         self.today_arrow = get_today_arrow()
+
+    def _parse_switch(self):
+        if not (self.args.perpetuate or self.args.backlink or self.args.reallocate or self.args.default or self.args.new):
+            print("No task need to process, please refer to help to set off a task.")
+            exit(0)
+        if_get_closed_task = True
+        quick_scan_closed_task = True
+        if self.args.new:
+            if_get_closed_task = False
+        if self.args.skip_get_closed_task:
+            if_get_closed_task = False
+        if self.args.full_scan_closed_task:
+            quick_scan_closed_task = False
+        return if_get_closed_task, quick_scan_closed_task
 
     def _get_target_words_task(self, start_day_offset):
         def condition(task: Task):
@@ -200,17 +218,52 @@ class DidaManipulate:
         self._add_new_ebbinghaus_tasks(words)
 
     def add_new_ebbinghaus_tasks_by_input(self):
-        word = input('Please input new word: ')
+        # word = input('Please input new word: ')
+        word = self.args.new
         self._add_new_ebbinghaus_tasks([word.strip()])
 
     @ensure_run_retry
-    def run(self):
+    def default_run(self, start_day_offset, selector):
         self.perpetuate_task()
         self.build_backlink()
-        self.reallocate_task(TargetDate.TOMARROW, TaskSelector.EARLY_GROUP_ROUND_ROBIN)
+        self.reallocate_task(start_day_offset, selector)
+
+    def run(self):
+        start_day_offset = TargetDate.TOMARROW
+        if args.start_day_offset == 'yesterday':
+            start_day_offset = TargetDate.YESTERDAY
+        elif args.start_day_offset == 'today':
+            start_day_offset = TargetDate.TODAY
+        selector = TaskSelector.EARLY_GROUP_ROUND_ROBIN
+        if args.selector == 'random_sample':
+            selector = TaskSelector.RANDOM_SAMPLE
+        if args.selector == 'earliest_start_date':
+            selector = TaskSelector.EARLIEST_START_DATE
+
+        if args.new:
+            self.add_new_ebbinghaus_tasks_by_input()
+        elif args.default:
+            self.default_run(start_day_offset, selector)
+        else:
+            if args.perpetuate:
+                self.perpetuate_task()
+            if args.backlink:
+                self.build_backlink()
+            if args.reallocate:
+                self.reallocate_task(start_day_offset, selector)
 
 
 if __name__ == '__main__':
-    dm = DidaManipulate(if_get_closed_task=False, quick_scan_closed_task=True)
-    dm.add_new_ebbinghaus_tasks_by_input()
-    # dm.run()
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument('-n', '--new', help='Add single new ebbinghaus task with the word specific', type=str)
+    parser.add_argument('-b', '--backlink', help='If build backlink', action='store_true')
+    parser.add_argument('-p', '--perpetuate', help='If perpetuate completed tasks.',  action='store_true')
+    parser.add_argument('-r', '--reallocate', help='If reallocate tasks.',  action='store_true')
+    parser.add_argument('-d', '--default', help='If run default procedure: 1.perpetuate_task 2.build_backlink 3.reallocate_task.',  action='store_true')
+    parser.add_argument('--skip_get_closed_task', help='If skip getting closed tasks.',  action='store_true')
+    parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
+    parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
+    parser.add_argument('--selector', help='Choose reallocation task selector, could be one of "random_sample", "earliest_start_date", "early_group_round_robin"', default='early_group_round_robin', type=str)
+    args = parser.parse_args()
+    dm = DidaManipulate(args)
+    dm.run()

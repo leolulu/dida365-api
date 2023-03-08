@@ -9,7 +9,7 @@ from utils.time_util import get_days_offset, get_today_arrow
 class TaskSelector:
     RANDOM_SAMPLE = 'selector_random_sample'
     EARLIEST_START_DATE = 'selector_earliest_start_date'
-    EARLY_GROUP_ROUND_ROBIN = 'early_group_round_robin'
+    EARLY_GROUP_ROUND_ROBIN = 'selector_early_group_round_robin'
 
     def __init__(self, target_tasks: List[Task], reallocation_len=0) -> None:
         self.target_tasks = target_tasks
