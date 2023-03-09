@@ -211,9 +211,15 @@ class DidaManipulate:
         self._add_new_ebbinghaus_tasks(words)
 
     def add_new_ebbinghaus_tasks_by_input(self):
-        # word = input('Please input new word: ')
-        word = self.args.new
-        self._add_new_ebbinghaus_tasks([word.strip()])
+        word = self.args.new.strip()
+        self._add_new_ebbinghaus_tasks([word])
+
+    def add_dictvoice_existing_task(self):
+        task_title = self.args.add_dictvoice.strip()
+        task = self.find_task(task_title)
+        task.add_upload_attachment_post_payload_by_bytes(*get_dictvoice_bytes(task_title))
+        self.dida.upload_attachment(*task.attachments_to_upload)
+        print("Dictvoice added.")
 
     @ensure_run_retry
     def default_run(self, start_day_offset, selector):
@@ -233,8 +239,11 @@ class DidaManipulate:
         if args.selector == 'earliest_start_date':
             selector = TaskSelector.EARLIEST_START_DATE
 
-        if args.new:
-            self.add_new_ebbinghaus_tasks_by_input()
+        if (args.new or args.add_dictvoice):
+            if args.new:
+                self.add_new_ebbinghaus_tasks_by_input()
+            if args.add_dictvoice:
+                self.add_dictvoice_existing_task()
         elif args.default:
             self.default_run(start_day_offset, selector)
         elif (args.perpetuate or args.backlink or args.reallocate):
@@ -254,6 +263,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--backlink', help='If build backlink', action='store_true')
     parser.add_argument('-p', '--perpetuate', help='If perpetuate completed tasks.',  action='store_true')
     parser.add_argument('-r', '--reallocate', help='If reallocate tasks.',  action='store_true')
+    parser.add_argument('-a', '--add_dictvoice', help='Add dictvoice to existing task.',  type=str)
     parser.add_argument('-d', '--default', help='If run default procedure: 1.perpetuate_task 2.build_backlink 3.reallocate_task.',  action='store_true')
     parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
     parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
