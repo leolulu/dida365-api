@@ -3,12 +3,11 @@ from typing import Callable
 
 
 def ensure_run_retry(run: Callable):
-    def wrapper(self):
+    def wrapper(self, *args):
         try:
-            run(self)
+            run(self, *args)
         except:
             traceback.print_exc()
             self.dida.get_latest_data()
-            run(self)
-        return run()
+            run(self, *args)
     return wrapper
