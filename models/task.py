@@ -105,10 +105,8 @@ class Task:
 
     def shift_start_date(self, days):
         self.org_start_date = self.start_date
-        start_date = self.start_date.shift(days=days)
-        self.shifted_start_date = start_date
-        self.start_date = get_utc_str(start_date)
-        self.task_dict[Task.START_DATE] = self.start_date
+        self.start_date = self.start_date.shift(days=days)
+        self.task_dict[Task.START_DATE] = get_utc_str(self.start_date)
 
     def change_status(self, status):
         self.status = status
@@ -116,8 +114,8 @@ class Task:
 
     def perpetuate_task(self):
         self.change_status(Task.STATUS_ACTIVE)
-        self.start_date = get_utc_str(self.start_date.replace(year=2099, month=12, day=31))
-        self.task_dict[Task.START_DATE] = self.start_date
+        self.start_date = self.start_date.replace(year=2099, month=12, day=31)
+        self.task_dict[Task.START_DATE] = get_utc_str(self.start_date)
 
     def update_content(self, content):
         self.content = content

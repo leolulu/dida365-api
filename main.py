@@ -62,7 +62,7 @@ class DidaManipulate:
             task_selector = TaskSelector(target_tasks, reallocation_len)
             for task in task_selector.select_task(selector):
                 task.shift_start_date(1)
-                print(f"Change start_date from [{task.org_start_date}] to [{task.shifted_start_date}], task created_time is [{task.created_time}], title is [{task.title}]")
+                print(f"Change start_date from [{task.org_start_date}] to [{task.start_date}], task created_time is [{task.created_time}], title is [{task.title}]")
                 self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
         else:
             print(f"Task quantity less than {DidaManipulate.QUANTITY_LIMIT}, skip reallocation.")
