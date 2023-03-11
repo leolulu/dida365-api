@@ -51,15 +51,15 @@ class DidaManipulate:
             self.dida.active_tasks
         )
         tasks = filter(lambda task: condition(task), tasks)
-        self.target_tasks = list(tasks)
+        return list(tasks)
 
     def reallocate_task(self, start_day_offset, selector):
-        self._get_target_words_task(start_day_offset)
-        task_len = len(self.target_tasks)
+        target_tasks = self._get_target_words_task(start_day_offset)
+        task_len = len(target_tasks)
         reallocation_len = task_len-DidaManipulate.QUANTITY_LIMIT
         if task_len > DidaManipulate.QUANTITY_LIMIT:
             print(f"Task quantity is {task_len}, quantity_limit is {DidaManipulate.QUANTITY_LIMIT}, will reallocate {reallocation_len} tasks.\n")
-            task_selector = TaskSelector(self.target_tasks, reallocation_len)
+            task_selector = TaskSelector(target_tasks, reallocation_len)
             for task in task_selector.select_task(selector):
                 task.shift_start_date(1)
                 print(f"Change start_date from [{task.org_start_date}] to [{task.shifted_start_date}], task created_time is [{task.created_time}], title is [{task.title}]")
@@ -221,6 +221,15 @@ class DidaManipulate:
         self.dida.upload_attachment(*task.attachments_to_upload)
         print("Dictvoice added.")
 
+    def renew_overdue_task(self):
+        overdue_tasks = []
+        for i in range(5):
+            i = -(i+1)
+            overdue_tasks.extend(self._get_target_words_task(i))
+            
+        for i in ([(i.title,i.start_date) for i in overdue_tasks]):
+            print(i)
+
     @ensure_run_retry
     def default_run(self, start_day_offset, selector):
         self.perpetuate_task()
@@ -253,6 +262,8 @@ class DidaManipulate:
                 self.build_backlink()
             if args.reallocate:
                 self.reallocate_task(start_day_offset, selector)
+        elif args.renew:
+            self.renew_overdue_task()
         else:
             print("No task need to process, please refer to help to set off a task.")
 
@@ -263,6 +274,7 @@ if __name__ == '__main__':
     parser.add_argument('-b', '--backlink', help='If build backlink', action='store_true')
     parser.add_argument('-p', '--perpetuate', help='If perpetuate completed tasks.',  action='store_true')
     parser.add_argument('-r', '--reallocate', help='If reallocate tasks.',  action='store_true')
+    parser.add_argument('-o', '--renew', help='If renew overdue tasks.', action='store_true')
     parser.add_argument('-a', '--add_dictvoice', help='Add dictvoice to existing task.',  type=str)
     parser.add_argument('-d', '--default', help='If run default procedure: 1.perpetuate_task 2.build_backlink 3.reallocate_task.',  action='store_true')
     parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
