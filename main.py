@@ -216,8 +216,11 @@ class DidaManipulate:
 
     def add_dictvoice_existing_task(self):
         task_title = self.args.add_dictvoice.strip()
+        query_word = task_title
+        if "~" in task_title:
+            task_title, query_word = task_title.split("~")
         task = self.find_task(task_title)
-        task.add_upload_attachment_post_payload_by_bytes(*get_dictvoice_bytes(task_title))
+        task.add_upload_attachment_post_payload_by_bytes(*get_dictvoice_bytes(query_word))
         self.dida.upload_attachment(*task.attachments_to_upload)
         print("Dictvoice added.")
 
