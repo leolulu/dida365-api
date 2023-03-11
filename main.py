@@ -225,13 +225,14 @@ class DidaManipulate:
         print("Dictvoice added.")
 
     def renew_overdue_task(self):
-        overdue_tasks = []
-        for i in range(5):
+        overdue_tasks: list[Task] = []
+        for i in range(3):
             i = -(i+1)
             overdue_tasks.extend(self._get_target_words_task(i))
-            
-        for i in ([(i.title,i.start_date) for i in overdue_tasks]):
-            print(i)
+        for task in overdue_tasks:
+            print(f"Renew task[{task.title}], start date: {task.start_date}")
+            task.change_start_date_to_today()
+            self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
 
     @ensure_run_retry
     def default_run(self, start_day_offset, selector):

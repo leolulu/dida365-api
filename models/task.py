@@ -2,7 +2,7 @@ from models.attachment import Attachment
 from models.upload_attachment import uploadAttachment
 from models.link import Link
 from utils.backlink_util import BackLinkUtil
-from utils.time_util import get_prc_arrow, get_utc_str
+from utils.time_util import get_prc_arrow, get_today_arrow, get_utc_str
 
 
 class Task:
@@ -106,6 +106,11 @@ class Task:
     def shift_start_date(self, days):
         self.org_start_date = self.start_date
         self.start_date = self.start_date.shift(days=days)
+        self.task_dict[Task.START_DATE] = get_utc_str(self.start_date)
+
+    def change_start_date_to_today(self):
+        ta = get_today_arrow()
+        self.start_date = self.start_date.replace(year=ta.year, month=ta.month, day=ta.day)
         self.task_dict[Task.START_DATE] = get_utc_str(self.start_date)
 
     def change_status(self, status):
