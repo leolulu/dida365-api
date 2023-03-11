@@ -23,10 +23,10 @@ from utils.time_util import get_days_offset, get_today_arrow
 
 class DidaManipulate:
     PROJECT_WORDS = b'\xe8\x83\x8c\xe5\x8d\x95\xe8\xaf\x8d'
-    QUANTITY_LIMIT = 40  # TODO: use local only config file to control
 
     def __init__(self, args: Namespace) -> None:
         self.args = args
+        self.quantity_limit = args.quantity_limit
         quick_scan_closed_task = self._parse_switch()
         self.dida = Dida365(quick_scan_closed_task)
         self.today_arrow = get_today_arrow()
@@ -56,16 +56,16 @@ class DidaManipulate:
     def reallocate_task(self, start_day_offset, selector):
         target_tasks = self._get_target_words_task(start_day_offset)
         task_len = len(target_tasks)
-        reallocation_len = task_len-DidaManipulate.QUANTITY_LIMIT
-        if task_len > DidaManipulate.QUANTITY_LIMIT:
-            print(f"Task quantity is {task_len}, quantity_limit is {DidaManipulate.QUANTITY_LIMIT}, will reallocate {reallocation_len} tasks.\n")
+        reallocation_len = task_len-self.quantity_limit
+        if task_len > self.quantity_limit:
+            print(f"Task quantity is {task_len}, quantity_limit is {self.quantity_limit}, will reallocate {reallocation_len} tasks.\n")
             task_selector = TaskSelector(target_tasks, reallocation_len)
             for task in task_selector.select_task(selector):
                 task.shift_start_date(1)
                 print(f"Change start_date from [{task.org_start_date}] to [{task.start_date}], task created_time is [{task.created_time}], title is [{task.title}]")
                 self.dida.post_task(Task.gen_update_date_payload(task.task_dict))
         else:
-            print(f"Task quantity less than {DidaManipulate.QUANTITY_LIMIT}, skip reallocation.")
+            print(f"Task quantity less than {self.quantity_limit}, skip reallocation.")
 
     def perpetuate_task(self):
         self.dida.get_closed_task('670946db840bf3f353ab7738')
@@ -284,6 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
     parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
     parser.add_argument('--selector', help='Choose reallocation task selector, could be one of "random_sample", "earliest_start_date", "early_group_round_robin"', default='early_group_round_robin', type=str)
+    parser.add_argument('--quantity_limit', help='Quantity limit for reallocation task', default=40, type=int)
     args = parser.parse_args()
     dm = DidaManipulate(args)
     dm.run()
