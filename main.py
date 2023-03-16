@@ -284,7 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('--full_scan_closed_task', help='Scan all closed tasks, otherwise only within 7 days.',  action='store_true')
     parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
     parser.add_argument('--selector', help='Choose reallocation task selector, could be one of "random_sample", "earliest_start_date", "early_group_round_robin"', default='early_group_round_robin', type=str)
-    parser.add_argument('--quantity_limit', help='Quantity limit for reallocation task', default=40, type=int)
+    parser.add_argument('--quantity_limit', help='Quantity limit for reallocation task', default=20, type=int)
     args = parser.parse_args()
     dm = DidaManipulate(args)
     dm.run()
