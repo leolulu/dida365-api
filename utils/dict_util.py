@@ -86,12 +86,23 @@ class BaiduFanyi:
             phonetics = [format_phonetic(i) for i in phonetics]
             return list(zip(types, phonetics))
 
+        def check_finish_loading(word):
+            dictionary_title_obj = self.edge_browser.find_elements('xpath', r"//div[@class='dictionary-title']/h3[@class='strong']")
+            if len(dictionary_title_obj) > 0:
+                dictionary_title = dictionary_title_obj[0].text
+                if dictionary_title == word:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+
         try:
             self.edge_browser.get(BaiduFanyi.URL.format(word=word))
             phonetics_info = []
             for _ in range(60):
                 phonetics_info = parse_page()
-                if len(phonetics_info) == 0:
+                if (not check_finish_loading(word)) or (len(phonetics_info) == 0):
                     time.sleep(1)
                 else:
                     break
