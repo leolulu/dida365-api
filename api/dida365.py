@@ -1,13 +1,14 @@
 import copy
-from io import BufferedReader
 import json
 import uuid
+from io import BufferedReader
 
 import requests
-from models.upload_attachment import uploadAttachment
+from retrying import retry
+
 from models.project import Project
 from models.task import Task
-
+from models.upload_attachment import uploadAttachment
 from utils.file_util import get_user_password
 from utils.time_util import get_standard_str, get_today_arrow
 
@@ -102,12 +103,14 @@ class Dida365:
         projects = self.data['projectProfiles']
         self.projects = [Project(i) for i in projects]
 
+    @retry(wait_fixed=4000, stop_max_attempt_number=5)
     def post_task(self, payload):
         url = self.base_url + "/batch/task"
         data = json.dumps(payload)
         r = self.session.request("POST", url, headers=self.headers, data=data)
         r.raise_for_status()
 
+    @retry(wait_fixed=4000, stop_max_attempt_number=5)
     def upload_attachment(self, *attachments: uploadAttachment):
         for attachment in attachments:
             url = "https://api.dida365.com/api/v1/attachment/upload/{project_id}/{task_id}/{uuid}".format(
