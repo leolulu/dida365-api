@@ -3,6 +3,7 @@ import copy
 import os
 import re
 from argparse import Namespace
+from pathlib import Path
 from time import sleep
 
 from api.dida365 import Dida365
@@ -201,7 +202,7 @@ class DidaManipulate:
             print("Content rearranged, put dictvoice behind.\n")
 
     def add_new_ebbinghaus_tasks_by_file(self):
-        words_path = r"C:\Users\pro3\Downloads\words.txt"
+        words_path = args.new_task_file_path
         if not os.path.exists(words_path):
             print(f"No words.txt in {words_path}, skip adding new ebbinghaus tasks.")
             return
@@ -252,9 +253,11 @@ class DidaManipulate:
         if args.selector == 'earliest_start_date':
             selector = TaskSelector.EARLIEST_START_DATE
 
-        if (args.new or args.add_dictvoice):
+        if (args.new or args.new_from_file or args.add_dictvoice):
             if args.new:
                 self.add_new_ebbinghaus_tasks_by_input()
+            if args.new_from_file:
+                self.add_new_ebbinghaus_tasks_by_file()
             if args.add_dictvoice:
                 self.add_dictvoice_existing_task()
         elif args.default:
@@ -275,6 +278,7 @@ class DidaManipulate:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('-n', '--new', help='Add single new ebbinghaus task with the word specific', type=str)
+    parser.add_argument('-f', '--new_from_file', help='Add multiple new ebbinghaus tasks using a words.txt file at given path.', action='store_true')
     parser.add_argument('-b', '--backlink', help='If build backlink', action='store_true')
     parser.add_argument('-p', '--perpetuate', help='If perpetuate completed tasks.',  action='store_true')
     parser.add_argument('-r', '--reallocate', help='If reallocate tasks.',  action='store_true')
@@ -285,6 +289,7 @@ if __name__ == '__main__':
     parser.add_argument('--start_day_offset', help='Choose reallocation task target date, could be one of "yesterday", "today", "tomarrow"', default='tomarrow', type=str)
     parser.add_argument('--selector', help='Choose reallocation task selector, could be one of "random_sample", "earliest_start_date", "early_group_round_robin"', default='early_group_round_robin', type=str)
     parser.add_argument('--quantity_limit', help='Quantity limit for reallocation task', default=20, type=int)
+    parser.add_argument('--new_task_file_path', help='The path of words.txt file for creating new tasks',  type=str, default=os.path.join(Path.home(), "Downloads", 'words.txt'))
     args = parser.parse_args()
     dm = DidaManipulate(args)
     dm.run()
